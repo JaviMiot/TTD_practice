@@ -1,4 +1,5 @@
 import unittest
+from functools import reduce
 
 
 class Money:
@@ -14,6 +15,24 @@ class Money:
 
     def __eq__(self, other: object) -> bool:
         return self.amount == other.amount and self.currency == other.currency
+
+
+class Portfolio:
+    def __init__(self):
+        self.moneys = []
+
+    def add(self, *money):
+        self.moneys.extend(money)
+
+    def evaluate(self, currency: str) -> Money:
+
+        filter_by_currency = filter(
+            lambda money: money.currency == currency, self.moneys)
+
+        total = reduce(lambda acc, money: acc +
+                       money.amount, filter_by_currency, 0)
+
+        return Money(total, currency)
 
 
 class TestMoney(unittest.TestCase):
@@ -33,6 +52,14 @@ class TestMoney(unittest.TestCase):
         expectedMoneyAfterDivision = Money(1000.5, 'KRW')
 
         self.assertEqual(actualMoneyAfterDivision, expectedMoneyAfterDivision)
+
+    def testAddition(self):
+        fifteenDollars = Money(15, 'USD')
+        fiveDollars = Money(5, 'USD')
+        tenDollars = Money(10, 'USD')
+        portfolio = Portfolio()
+        portfolio.add(fiveDollars, tenDollars)
+        self.assertEqual(portfolio.evaluate('USD'), fifteenDollars)
 
 
 if __name__ == '__main__':
