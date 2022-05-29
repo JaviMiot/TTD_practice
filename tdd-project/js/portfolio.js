@@ -9,11 +9,22 @@ class Portfolio {
     }
 
     evaluate(currency) {
+        let failures = [];
+
         const total = this.moneys.reduce((sum, money) => {
-            return sum + this.convert(money, currency);
+            let convertedAmount = this.convert(money, currency);
+            if (!convertedAmount) {
+                failures.push(`${money.currency}->${currency}`);
+                return sum;
+            }
+            return sum + convertedAmount;
         }, 0);
 
-        return new Money(total, currency);
+        if (!failures.length) {
+            return new Money(total, currency);
+        }
+
+        throw new Error(`Missing exchange rate(s):[${failures.join(',')}]`);
     }
 
     convert(money, currency) {
@@ -21,13 +32,18 @@ class Portfolio {
         exchangeRate.set('EUR->USD', 1.2);
         exchangeRate.set('USD->KRW', 1100);
 
-        let key = money.currency + '->' + currency;
-
         if (money.currency === currency) {
             return money.amount;
         }
 
-        return money.amount * exchangeRate.get(key);
+        let key = money.currency + '->' + currency;
+        let rate = exchangeRate.get(key);
+
+        if (!rate) {
+            return undefined;
+        }
+
+        return money.amount * rate;
     }
 }
 

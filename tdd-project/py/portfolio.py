@@ -12,14 +12,20 @@ class Portfolio:
         self.moneys.extend(money)
 
     def evaluate(self, currency: str) -> Money:
+        total = 0.0
+        failures = []
 
-        map_by_currency = list(map(
-            lambda money: self._convert(money, currency), self.moneys))
+        for m in self.moneys:
+            try:
+                total += self._convert(m, currency).amount
+            except KeyError as ke:
+                failures.append(ke)
 
-        total = reduce(lambda acc, money: acc +
-                       money.amount, map_by_currency, 0)
+        if len(failures) == 0:
+            return Money(total, currency)
 
-        return Money(total, currency)
+        failureMessage = ','.join(f.args[0] for f in failures)
+        raise Exception(f'Missing exchange rate(s):[{failureMessage}]')
 
     def _convert(self, money: Money, currency: str) -> Money:
 
