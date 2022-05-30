@@ -1,6 +1,7 @@
 from functools import reduce
 
 from money import Money
+from bank import Bank
 
 
 class Portfolio:
@@ -11,13 +12,13 @@ class Portfolio:
     def add(self, *money):
         self.moneys.extend(money)
 
-    def evaluate(self, currency: str) -> Money:
+    def evaluate(self, bank: Bank, currency: str) -> Money:
         total = 0.0
         failures = []
 
         for m in self.moneys:
             try:
-                total += self._convert(m, currency).amount
+                total += bank.convert(m, currency).amount
             except KeyError as ke:
                 failures.append(ke)
 
@@ -26,11 +27,3 @@ class Portfolio:
 
         failureMessage = ','.join(f.args[0] for f in failures)
         raise Exception(f'Missing exchange rate(s):[{failureMessage}]')
-
-    def _convert(self, money: Money, currency: str) -> Money:
-
-        key = f'{money.currency}->{currency}'
-        if money.currency == currency:
-            return money
-        money.amount *= self.exchange_rates[key]
-        return money
