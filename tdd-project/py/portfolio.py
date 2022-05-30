@@ -1,6 +1,7 @@
 from functools import reduce
 
 from money import Money
+from bank import Bank
 
 
 class Portfolio:
@@ -11,13 +12,13 @@ class Portfolio:
     def add(self, *money):
         self.moneys.extend(money)
 
-    def evaluate(self, currency: str) -> Money:
+    def evaluate(self, bank: Bank, currency: str) -> Money:
         total = 0.0
         failures = []
 
         for m in self.moneys:
             try:
-                total += self._convert(m, currency).amount
+                total += bank.convert(m, currency).amount
             except KeyError as ke:
                 failures.append(ke)
 
