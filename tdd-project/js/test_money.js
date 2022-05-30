@@ -7,8 +7,8 @@ const Bank = require('./bank');
 class MoneyTest {
     constructor() {
         this.bank = new Bank();
-        this.bank.addExchangeRate("EUR", "USD", 1.2);
-        this.bank.addExchangeRate("USD", "KRW", 1100);
+        this.bank.addExchangeRate('EUR', 'USD', 1.2);
+        this.bank.addExchangeRate('USD', 'KRW', 1100);
     }
 
     testMultiplication() {
@@ -33,7 +33,10 @@ class MoneyTest {
         let fifteenDollars = new Money(15, 'USD');
         let portfolio = new Portfolio();
         portfolio.add(fiveDollars, tenDollars);
-        assert.deepStrictEqual(portfolio.evaluate(this.bank, 'USD'), fifteenDollars);
+        assert.deepStrictEqual(
+            portfolio.evaluate(this.bank, 'USD'),
+            fifteenDollars
+        );
     }
 
     testAdditionOfDollarsAndEuros() {
@@ -64,22 +67,33 @@ class MoneyTest {
             'Missing exchange rate(s):[USD->Kalganid,EUR->Kalganid,KRW->Kalganid]'
         );
         let bank = this.bank;
-        assert.throws(() => portfolio.evaluate(bank, "Kalganid"), expectedError);
+        assert.throws(() => portfolio.evaluate(bank, 'Kalganid'), expectedError);
     }
 
-    testConversion() {
-        let tenEuros = new Money(10, 'EUR');
-        assert.deepStrictEqual(this.bank.convert(tenEuros, 'USD'), new Money(12, 'USD'));
+    testWhatIsTheConversionRateFromEURToUSD() {
+        let tenEuros = new Money(10, "EUR");
+        assert.deepStrictEqual(this.bank.convert(tenEuros, "USD"),
+            new Money(12, "USD"));
+    }
+
+    testConversionWithDifferentRatesBetweenTwoCurrencies() {
+        let tenEuros = new Money(10, "EUR");
+        assert.deepStrictEqual(this.bank.convert(tenEuros, "USD"),
+            new Money(12, "USD"));
+
+        this.bank.addExchangeRate("EUR", "USD", 1.3);
+        assert.deepStrictEqual(this.bank.convert(tenEuros, "USD"),
+            new Money(13, "USD"));
     }
 
     testConversionWithMissingExchangeRate() {
         let bank = this.bank;
-        let tenEuros = new Money(10, "EUR");
-        let expectedError = new Error("EUR->Kalganid");
-        assert.throws(function () { bank.convert(tenEuros, "Kalganid"); },
-            expectedError);
+        let tenEuros = new Money(10, 'EUR');
+        let expectedError = new Error('EUR->Kalganid');
+        assert.throws(function () {
+            bank.convert(tenEuros, 'Kalganid');
+        }, expectedError);
     }
-
 
     getAllTestMethods() {
         let moneyPrototype = MoneyTest.prototype;
@@ -93,6 +107,13 @@ class MoneyTest {
         return testMethods;
     }
 
+    setUp() {
+        1;
+        this.bank = new Bank();
+        this.bank.addExchangeRate("EUR", "USD", 1.2);
+        this.bank.addExchangeRate("USD", "KRW", 1100);
+    }
+
     runAllTest() {
         const testMethods = this.getAllTestMethods();
         testMethods.forEach((method) => {
@@ -100,6 +121,7 @@ class MoneyTest {
             let methodReflect = Reflect.get(this, method);
 
             try {
+                this.setUp();
                 Reflect.apply(methodReflect, this, []);
             } catch (error) {
                 if (error instanceof assert.AssertionError) {
